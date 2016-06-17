@@ -94,17 +94,18 @@ HEMI_KERNEL(jump_decider)(RNGState* rng, double* nll_current,
  *
  * Calculate -sum(log(sum(Nj * Pj(xi)))) contribution to NLL.
  *
- * \param lut Pj(xi) lookup table
- * \param dataweights TODO
+ * \param lut Pj(xi) lookup table - size: nbins * ndatasets * nsignals (zero outside signal's dataset)
+ * \param bin_counts - size: nbins * ndatasets
  * \param pars Event rates (normalizations) for each signal
- * \param ne Number of events in the data
- * \param ns Number of signals
+ * \param nbins
+ * \param ndatasets
+ * \param nsignals Number of signals
  * \param norms The number of events in the PDF range (with systematics)
  * \param norms_nominal The number of events nominally in the PDF
  * \param sums Output sums for subsets of events
 */
 HEMI_KERNEL(nll_event_chunks)(const float* lut, const float* bin_counts,
-                              const double* pars, const size_t total_nbins,
+                              const double* pars, const size_t nbins, const size_t ndatasets,
                               const size_t nsignals,
                               const double* nexpected,
                               const unsigned* n_mc,

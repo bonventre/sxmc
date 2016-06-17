@@ -401,30 +401,19 @@ HEMI_KERNEL(bin_samples)(int ndata, const float* data,
 }
 
 
-HEMI_KERNEL(eval_pdf)(int npoints, const int* read_bins,
-                      const unsigned int* __restrict__ bins,
+HEMI_KERNEL(eval_pdf)(const unsigned int* __restrict__ bins,
                       const unsigned int* __restrict__ norm,
-                      double bin_volume,
+                      double bin_volume, int nbins, int ndatasets, int dataset,
                       float* output, int output_stride) {
   int offset = hemiGetElementOffset();
   int stride = hemiGetElementStride();
   const double bin_norm = *norm * bin_volume;
 
-  for (int ipoint=offset; ipoint<npoints; ipoint += stride) {
-    int bin_id = read_bins[ipoint];
-
-    double pdf_value = 0.0f;
-    if (bin_id == -2) {
-      pdf_value = 0.0;
-    }
-    else if (bin_id < 0) {
-      pdf_value = nanf("");
-    }
-    else {
-      pdf_value = bins[bin_id] / bin_norm;
-    }
-
-    output[output_stride * ipoint] = pdf_value;
+  for (int bin_id=offset; bin_id < nbins * ndatasets; bin_id += stride){
+    if (bin_id < nbins * dataset)
+      output[output_stride * bin_id] = 0;
+    else
+      output[output_stride * bin_id] = bins[bin_id] / bin_norm;
   }
 }
 
@@ -464,18 +453,16 @@ void EvalHist::EvalAsync(bool do_eval_pdf) {
 
   // This can happen if someone wants to create a histogram
   // with no eval points.
-  if (this->read_bins == 0 || !do_eval_pdf) {
+  if (!do_eval_pdf) {
     return;
   }
 
   HEMI_KERNEL_LAUNCH(eval_pdf, this->eval_nblocks,
                      this->eval_nthreads_per_block, 0,
                      this->cuda_state->stream,
-                     (int) this->read_bins->size(),
-                     this->read_bins->readOnlyPtr(),
                      this->bins->readOnlyPtr(),
                      this->norm_buffer->readOnlyPtr() + this->norm_offset,
-                     this->bin_volume,
+                     this->bin_volume, this->total_nbins, this->ndatasets, this->dataset,
                      this->pdf_buffer->writeOnlyPtr() + this->pdf_offset,
                      this->pdf_stride);
 }
@@ -773,12 +760,10 @@ void EvalHist::OptimizeEval() {
       for (int irep=0; irep<nreps; irep++) {
         HEMI_KERNEL_LAUNCH(eval_pdf, grid_size, block_size, 0,
                            this->cuda_state->stream,
-                           (int) this->read_bins->size(),
-                           this->read_bins->readOnlyPtr(),
                            this->bins->readOnlyPtr(),
                            (this->norm_buffer->readOnlyPtr() +
                             this->norm_offset),
-                           this->bin_volume,
+                           this->bin_volume, this->total_nbins, this->ndatasets, this->dataset,
                            (this->pdf_buffer->writeOnlyPtr() +
                             this->pdf_offset),
                            this->pdf_stride);

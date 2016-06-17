@@ -97,7 +97,7 @@ protected:
    *                           calculation
    * \param event_total_sum Pre-allocated buffer for event term total
    */
-  void nll(const float* lut, const float* bin_counts, size_t total_nbins,
+  void nll(const float* lut, const float* bin_counts,
            const double* v, double* nll,
            const double* nexpected,
            const unsigned* n_mc,
@@ -113,6 +113,8 @@ private:
   size_t nparameters;  //!< Total number of parameters
   size_t nobservables;  //!< Number of observables in data
   size_t nfloat;  //!< Number of floating parameters
+  size_t nbins; //!< total number of bins
+  size_t ndatasets; //!< total number of generations
   bool systematics_fixed;  //!< All systematic parameters are fixed
   unsigned nnllblocks;  //!< Number of cuda blocks for nll partial sums
   unsigned nllblocksize;  //!< Size of cuda blocks for nll partial sums

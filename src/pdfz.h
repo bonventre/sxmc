@@ -300,6 +300,7 @@ public:
    * creating a race condition.
   */
   virtual void EvalFinished() = 0;
+  unsigned ndatasets;
 
 protected:
     int nfields;
@@ -416,7 +417,6 @@ public:
     }
   }
 
-    int total_nbins;
 protected:
     hemi::Array<float> samples;
     hemi::Array<int>* read_bins;
@@ -424,6 +424,7 @@ protected:
     hemi::Array<int> bin_stride;
     hemi::Array<unsigned int>* bins;
 
+    int total_nbins;
     double bin_volume;
 
     int bin_nthreads_per_block;

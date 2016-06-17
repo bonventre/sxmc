@@ -88,7 +88,7 @@ void jump_decider_device(RNGState* rng, double* nll_current,
 
 HEMI_KERNEL(nll_event_chunks)(const float* __restrict__ lut, const float* __restrict__ bin_counts,
                               const double* __restrict__ pars,
-                              const size_t total_nbins, const size_t nsignals,
+                              const size_t nbins, const size_t ndatasets, const size_t nsignals,
                               const double* nexpected,
                               const unsigned* n_mc,
                               const short* source_id,
@@ -98,10 +98,10 @@ HEMI_KERNEL(nll_event_chunks)(const float* __restrict__ lut, const float* __rest
   int stride = hemiGetElementStride();
 
   double sum = 0;
-  for (int i=offset; i<(int)total_nbins; i+=stride) {
+  for (int i=offset; i<(int)(nbins * ndatasets); i+=stride) {
     double s = 0;
     for (size_t j=0; j<nsignals; j++) {
-      float v = lut[j * total_nbins + i];
+      float v = lut[j * nbins * ndatasets + i];
       float eff = 1.0 * norms[j] / n_mc[j];
       short sid = source_id[j];
       s += pars[sid] * nexpected[j] * eff * (!isnan(v) ? v : 0);  // Handle nans from empty hists
