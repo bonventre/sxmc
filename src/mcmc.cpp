@@ -241,8 +241,26 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
     p->SetParameterBuffer(&proposed_vector, this->nsources);
   }
 
+  hemi::Array<float> lut2((int)(dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins * this->nsignals),true); // * ngenerations //FIXME
+  hemi::Array<float> bin_counts((int)(dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins),true); // * ngenerations //FIXME
+  for (size_t i=0;i<lut2.size();i++){
+    lut2.writeOnlyPtr()[i] = 0;
+  }
+  for (size_t i=0;i<bin_counts.size();i++){
+    bin_counts.writeOnlyPtr()[i] = 0;
+  }
+  for (size_t i=0;i<nevents;i++){
+    double obs = data[i*2];
+    int dataset = data[i*2 + 1];
+    int bin_id = (int) obs;
+    bin_counts.writeOnlyPtr()[bin_id]++;
+    for (size_t j=0;j<this->nsignals;j++){
+      lut2.writeOnlyPtr()[dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins * j + bin_id] = lut.readOnlyPtr()[nevents * j + i];
+    }
+  }
+
   // Calculate NLL with initial parameters
-  nll(lut.readOnlyPtr(), nevents,
+  nll(lut2.readOnlyPtr(), bin_counts.readOnlyPtr(), dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins, // * ngenerations //FIXME
       current_vector.readOnlyPtr(), current_nll.writeOnlyPtr(),
       this->nexpected->readOnlyPtr(), this->n_mc->readOnlyPtr(),
       this->source_id->readOnlyPtr(),
@@ -310,12 +328,31 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
       }
     }
 
+    hemi::Array<float> lut3((int) (dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins * this->nsignals),true); // * ngenerations //FIXME
+    hemi::Array<float> bin_counts3((int) (dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins),true); // * ngenerations //FIXME
+
+  for (size_t k=0;k<lut3.size();k++){
+    lut3.writeOnlyPtr()[k] = 0;
+  }
+  for (size_t k=0;k<bin_counts3.size();k++){
+    bin_counts3.writeOnlyPtr()[k] = 0;
+  }
+    for (size_t k=0;k<nevents;k++){
+      double obs = data[k*2];
+      int dataset = data[k*2 + 1];
+      int bin_id = (int) obs;
+      bin_counts3.writeOnlyPtr()[bin_id]++;
+      for (size_t j=0;j<this->nsignals;j++){
+        lut3.writeOnlyPtr()[dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins * j + bin_id] = lut.readOnlyPtr()[nevents * j + k];
+      }
+    }
+
     // Partial sums of event term
     HEMI_KERNEL_LAUNCH(nll_event_chunks, this->nnllblocks,
                        this->nllblocksize, 0, 0,
-                       lut.readOnlyPtr(),
+                       lut3.readOnlyPtr(), bin_counts3.readOnlyPtr(),
                        proposed_vector.readOnlyPtr(),
-                       nevents, this->nsignals,
+                       dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->total_nbins, this->nsignals,
                        this->nexpected->readOnlyPtr(),
                        this->n_mc->readOnlyPtr(),
                        this->source_id->readOnlyPtr(),
@@ -369,6 +406,9 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
                                          this->nparameters];
 
          nt->Fill(jump_vector);
+         if (i % 10000 == 0 && j == 0){
+           std::cout << "NLL: " << jump_vector[this->nparameters] << std::endl;
+         }
       }
 
       // Reset counters
@@ -387,7 +427,7 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
 }
 
 
-void MCMC::nll(const float* lut, size_t nevents, const double* v, double* nll,
+void MCMC::nll(const float* lut, const float* bin_counts, size_t total_nbins, const double* v, double* nll,
                const double* nexpected, const unsigned* n_mc,
                const short* source_id,
                const unsigned* norms,
@@ -395,7 +435,7 @@ void MCMC::nll(const float* lut, size_t nevents, const double* v, double* nll,
   // Partial sums of event term
   HEMI_KERNEL_LAUNCH(nll_event_chunks,
                      this->nnllblocks, this->nllblocksize, 0, 0,
-                     lut, v, nevents, this->nsignals,
+                     lut, bin_counts, v, total_nbins, this->nsignals,
                      nexpected, n_mc, source_id,
                      norms,
                      event_partial_sums);

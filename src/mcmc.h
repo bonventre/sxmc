@@ -97,7 +97,7 @@ protected:
    *                           calculation
    * \param event_total_sum Pre-allocated buffer for event term total
    */
-  void nll(const float* lut, size_t nevents,
+  void nll(const float* lut, const float* bin_counts, size_t total_nbins,
            const double* v, double* nll,
            const double* nexpected,
            const unsigned* n_mc,

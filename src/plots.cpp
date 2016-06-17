@@ -245,7 +245,9 @@ void plot_fit(std::map<std::string, Interval> best_fit, float live_time,
 
     unsigned ds = signals[i].dataset;
 
-    unsigned ii = i % (datasets.size() - 1);
+    unsigned ii = 0;
+    if (datasets.size() > 1)
+      ii = i % (datasets.size() - 1);
     int color = colors[ii % ncolors];
     int style = styles[ii % ncolors];
 
