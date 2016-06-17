@@ -417,6 +417,46 @@ public:
     }
   }
 
+  void BinSamples(std::vector<float> &samples, std::vector<float> &bin_counts){
+    const double* lower = this->lower.readOnlyHostPtr();
+    const double* upper = this->upper.readOnlyHostPtr();
+    const int* nbins = this->nbins.readOnlyHostPtr();
+    const int* bin_stride = this->bin_stride.readOnlyHostPtr();
+
+    std::vector<double> bin_scale(this->nobservables);
+
+    for (int iobs=0; iobs<this->nobservables; iobs++) {
+      double span = upper[iobs] - lower[iobs];
+      bin_scale[iobs] = nbins[iobs] / span;
+    }
+
+    for (unsigned ipoint=0; ipoint<samples.size()/(this->nobservables+1); ipoint++) {
+      bool in_pdf_domain = true;
+      int bin_id = 0;
+
+      for (int iobs=0; iobs<this->nobservables; iobs++) {
+        int ielement = (this->nobservables + 1) * ipoint + iobs;
+        double element = samples[ielement];
+
+        // Throw out this event if outside of PDF domain
+        if (element < lower[iobs] || element >= upper[iobs]) {
+          in_pdf_domain = false;
+          break;
+        }
+
+        bin_id += \
+                  (int)((element - lower[iobs]) * bin_scale[iobs]) * bin_stride[iobs];
+      }
+
+      // Read dataset ID from the last column
+      int idx = (this->nobservables + 1) * ipoint + nobservables;
+      int sample_dataset = samples[idx];
+      if (in_pdf_domain) {
+        bin_counts[sample_dataset * this->total_nbins + bin_id]++;
+      }
+    }
+  }
+
 protected:
     hemi::Array<float> samples;
     hemi::Array<int>* read_bins;

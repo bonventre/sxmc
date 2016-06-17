@@ -239,14 +239,8 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
   //FIXME bin data
   // binned data size: nbins * ndatasets
   std::vector<float> binned_data(this->nbins * this->ndatasets, 0);
+  dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->BinSamples(data,binned_data);
   hemi::Array<float> bin_counts(this->nbins * this->ndatasets, true);
-  size_t nevents = data.size() / (this->nobservables + 1);
-  for (size_t i=0;i<nevents;i++){
-    double obs = data[i*2];
-    int dataset = data[i*2 + 1];
-    int bin_id = (int) obs;
-    binned_data[bin_id]++;
-  }
   for (size_t i=0;i<binned_data.size();i++)
     bin_counts.writeOnlyPtr()[i] = binned_data[i];
 

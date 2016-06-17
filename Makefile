@@ -148,3 +148,5 @@ bin/bench_sxmc: $(OBJ_DIR)/bench_sxmc.o $(SXMC_NO_MAIN_FUNCTION_OBJECTS)
 	@echo $(SXMC_NO_MAIN_FUNCTION_OBJECTS)
 	$(GCC) -o $@ $^ $(GCCFLAGS) $(LFLAGS) $(CUDA_LFLAGS)
 
+bin/create_test_data:
+	$(GCC) -o $@ test/create_test_data.c $(shell root-config --libs) -I$(shell root-config --incdir)
