@@ -57,7 +57,7 @@ HEMI_DEV_CALLABLE_INLINE
 void jump_decider_device(RNGState* rng, double* nll_current,
                          const double* nll_proposed, double* v_current,
                          const double* v_proposed, unsigned nparameters,
-                         int* accepted, int* counter, float* jump_buffer,
+                         int* accepted, int* counter, float* jump_buffer, double* jump_nll_buffer,
                          const bool debug_mode=false) {
 #ifdef HEMI_DEV_CODE
   double u = curand_uniform(&rng[0]);
@@ -82,11 +82,12 @@ void jump_decider_device(RNGState* rng, double* nll_current,
     jump_buffer[count * (nparameters + 1) + i] = v_current[i];
   }
   jump_buffer[count * (nparameters + 1) + nparameters] = nll_current[0];
+  jump_nll_buffer[count] = nll_current[0];
   counter[0] = count + 1;    
 }
 
 
-HEMI_KERNEL(nll_event_chunks)(const float* __restrict__ lut, const float* __restrict__ bin_counts,
+HEMI_KERNEL(nll_event_chunks)(const float* __restrict__ lut, const int* __restrict__ bin_counts,
                               const double* __restrict__ pars,
                               const size_t nbins, const size_t ndatasets, const size_t nsignals,
                               const double* nexpected,
@@ -200,9 +201,9 @@ HEMI_KERNEL(pick_new_vector)(int nthreads, RNGState* rng,
 HEMI_KERNEL(jump_decider)(RNGState* rng, double* nll_current,
                           const double* nll_proposed, double* v_current,
                           const double* v_proposed, unsigned nparameters,
-                          int* accepted, int* counter, float* jump_buffer) {
+                          int* accepted, int* counter, float* jump_buffer, double* jump_nll_buffer) {
   jump_decider_device(rng, nll_current, nll_proposed, v_current, v_proposed,
-                      nparameters, accepted, counter, jump_buffer);
+                      nparameters, accepted, counter, jump_buffer, jump_nll_buffer);
 }
 
 
@@ -238,7 +239,8 @@ HEMI_KERNEL(finish_nll_jump_pick_combo)(const size_t npartial_sums,
                                         double* nll_proposed,
                                         double* v_current, double* v_proposed,
                                         int* accepted, int* counter,
-                                        float* jump_buffer, int nparameters,
+                                        float* jump_buffer, double* jump_nll_buffer,
+                                        int nparameters,
                                         const float* jump_width,
                                         const double* nexpected,
                                         const unsigned* n_mc,
@@ -259,7 +261,7 @@ HEMI_KERNEL(finish_nll_jump_pick_combo)(const size_t npartial_sums,
                      nll_proposed);
 
     jump_decider_device(rng, nll_current, nll_proposed, v_current, v_proposed,
-                        nparameters, accepted, counter, jump_buffer,
+                        nparameters, accepted, counter, jump_buffer, jump_nll_buffer,
                         debug_mode);
   }
 

@@ -6,7 +6,7 @@
 #include <TLegend.h>
 #include <TH1.h>
 #include <TDirectory.h>
-#include <TNtuple.h>
+#include <TNtupleD.h>
 #include <TMath.h>
 
 #include <sxmc/utils.h>
@@ -16,8 +16,8 @@ unsigned nint(float nexpected) {
 }
 
 
-float get_ntuple_entry(TNtuple* nt, int i, std::string field) {
-  float v;
+double get_ntuple_entry(TNtupleD* nt, int i, std::string field) {
+  double v;
   nt->SetBranchAddress(field.c_str(), &v);
   assert(i < nt->GetEntries());
   nt->GetEvent(i);
@@ -26,7 +26,7 @@ float get_ntuple_entry(TNtuple* nt, int i, std::string field) {
 }
 
 
-std::vector<float> get_correlation_matrix(TNtuple* nt) {
+std::vector<double> get_correlation_matrix(TNtupleD* nt) {
   int nentries = nt->GetEntries();
 
   // Get list of branch names
@@ -39,14 +39,14 @@ std::vector<float> get_correlation_matrix(TNtuple* nt) {
     names.push_back(name);
   }
 
-  std::vector<float> matrix(names.size() * names.size());
+  std::vector<double> matrix(names.size() * names.size());
 
   // Convert the ntuple to a vector, calculating means as we go
-  std::vector<float> table(names.size() * nentries);
-  std::vector<float> means(names.size(), 0);
+  std::vector<double> table(names.size() * nentries);
+  std::vector<double> means(names.size(), 0);
   for (int i=0; i<nentries; i++) {
     for (size_t j=0; j<names.size(); j++) {
-      float v = get_ntuple_entry(nt, i, names.at(j));
+      double v = get_ntuple_entry(nt, i, names.at(j));
       table.at(j + i * names.size()) = v;
       means.at(j) += v;
     }
@@ -60,12 +60,12 @@ std::vector<float> get_correlation_matrix(TNtuple* nt) {
   // Compute correlations
   for (size_t i=0; i<names.size(); i++) {
     for (size_t j=i; j<names.size(); j++) {
-      float t = 0;
-      float dx2 = 0;
-      float dy2 = 0;
+      double t = 0;
+      double dx2 = 0;
+      double dy2 = 0;
       for (int k=0; k<nentries; k++) {
-        float x1 = table.at(i + k * names.size()) - means.at(i);
-        float x2 = table.at(j + k * names.size()) - means.at(j);
+        double x1 = table.at(i + k * names.size()) - means.at(i);
+        double x2 = table.at(j + k * names.size()) - means.at(j);
         t += x1 * x2;
         dx2 += x1 * x1;
         dy2 += x2 * x2;

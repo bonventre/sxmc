@@ -9,7 +9,7 @@
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TF1.h>
-#include <TNtuple.h>
+#include <TNtupleD.h>
 #include <TRandom.h>
 #include <TStopwatch.h>
 #include <TDirectory.h>
@@ -160,7 +160,7 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
   unsigned burnin_steps = nsteps * burnin_fraction;
 
   // Ntuple to hold likelihood space
-  TNtuple* nt = new TNtuple("lspace", "Likelihood space",
+  TNtupleD* nt = new TNtupleD("lspace", "Likelihood space",
                             this->varlist.c_str());
 
   // Buffers for current and proposed parameter vectors
@@ -192,8 +192,9 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
   accept_counter.writeOnlyHostPtr()[0] = 0;
 
   hemi::Array<float> jump_buffer(sync_interval * (this->nparameters+1), true);
+  hemi::Array<double> jump_nll_buffer(sync_interval, true);
 
-  float* jump_vector = new float[this->nparameters + 1];
+  double* jump_vector = new double[this->nparameters + 1];
 
   // Buffers for nll values at current and proposed parameter vectors
   hemi::Array<double> current_nll(1, true);
@@ -238,9 +239,9 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
 
   //FIXME bin data
   // binned data size: nbins * ndatasets
-  std::vector<float> binned_data(this->nbins * this->ndatasets, 0);
+  std::vector<int> binned_data(this->nbins * this->ndatasets, 0);
   dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->BinSamples(data,binned_data);
-  hemi::Array<float> bin_counts(this->nbins * this->ndatasets, true);
+  hemi::Array<int> bin_counts(this->nbins * this->ndatasets, true);
   for (size_t i=0;i<binned_data.size();i++)
     bin_counts.writeOnlyPtr()[i] = binned_data[i];
 
@@ -302,7 +303,7 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
         }
 
         nt->Draw((name + ">>hsproj").c_str());
-        TH1F* hsproj = (TH1F*) gDirectory->Get("hsproj");
+        TH1D* hsproj = (TH1D*) gDirectory->Get("hsproj");
         assert(hsproj);
 
         double fit_width = (hsproj->GetRMS() > 0 ? hsproj->GetRMS() :
@@ -355,6 +356,7 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
                        accept_counter.ptr(),
                        jump_counter.ptr(),
                        jump_buffer.writeOnlyPtr(),
+                       jump_nll_buffer.writeOnlyPtr(),
                        this->nparameters,
                        jump_width.readOnlyPtr(),
                        this->nexpected->readOnlyPtr(),
@@ -381,8 +383,7 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
          }
          // ... Last element is the (negative log) likelihood
          jump_vector[this->nparameters] = \
-           jump_buffer.readOnlyHostPtr()[j * (this->nparameters + 1) +
-                                         this->nparameters];
+           jump_nll_buffer.readOnlyHostPtr()[j];
 
          nt->Fill(jump_vector);
          if (i % 10000 == 0 && j == 0){
@@ -406,7 +407,7 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
 }
 
 
-void MCMC::nll(const float* lut, const float* bin_counts, const double* v, double* nll,
+void MCMC::nll(const float* lut, const int* bin_counts, const double* v, double* nll,
                const double* nexpected, const unsigned* n_mc,
                const short* source_id,
                const unsigned* norms,

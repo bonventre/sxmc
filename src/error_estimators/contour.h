@@ -11,7 +11,7 @@
 #include <sxmc/error_estimator.h>
 #include <sxmc/interval.h>
 
-class TNtuple;
+class TNtupleD;
 class LikelihoodSpace;
 
 namespace sxmc {
@@ -53,7 +53,7 @@ class Contour : public ErrorEstimator {
     virtual Interval get_interval(std::string name);
 
   protected:
-    TNtuple* contour_points;  //!< Likelihood space samples within the contour
+    TNtupleD* contour_points;  //!< Likelihood space samples within the contour
 };
 
   }  // namespace errors

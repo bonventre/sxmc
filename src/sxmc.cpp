@@ -19,7 +19,7 @@
 #include <sstream>
 #include <TStyle.h>
 #include <TFile.h>
-#include <TNtuple.h>
+#include <TNtupleD.h>
 #include <TRandom.h>
 #include <TRandom2.h>
 #include <TROOT.h>
@@ -87,7 +87,7 @@ std::vector<float> ensemble(FitConfig& fc, std::string output_path) {
     std::ostringstream lsfile;
     lsfile << output_path << fc.output_prefix << "_" << i << ".root";
     TFile f(lsfile.str().c_str(), "recreate");
-    TNtuple* lsclone = dynamic_cast<TNtuple*>(ls->get_samples()->Clone("ls"));
+    TNtupleD* lsclone = dynamic_cast<TNtupleD*>(ls->get_samples()->Clone("ls"));
     lsclone->Write();
     lsclone->Delete();
     f.Close();
@@ -102,7 +102,7 @@ std::vector<float> ensemble(FitConfig& fc, std::string output_path) {
     }
 
     // Build a list of upper limits
-    float ml;
+    double ml;
     std::map<std::string, Interval> best_fit = \
       ls->extract_best_fit(ml, fc.confidence, ERROR_PROJECTION);
 

@@ -13,8 +13,8 @@
 #include <sxmc/error_estimator.h>
 #include <sxmc/interval.h>
 
-class TNtuple;
-class TH1F;
+class TNtupleD;
+class TH1D;
 
 /**
  * Samples from a likelihood function.
@@ -32,7 +32,7 @@ class LikelihoodSpace {
      * \param samples - A set of samples of the likelihood space
      * \param cl - Confidence level for error estimation
     */
-    LikelihoodSpace(TNtuple* samples, float cl=0.68);
+    LikelihoodSpace(TNtupleD* samples, float cl=0.68);
 
     /** Destructor. */
     virtual ~LikelihoodSpace();
@@ -60,7 +60,7 @@ class LikelihoodSpace {
      * \param delta Number of likelihood units from max to include
      * \returns TNtuple with requested samples
     */
-    TNtuple* get_contour(float delta);
+    TNtupleD* get_contour(float delta);
 
     /**
      * Extract the best-fit parameters and uncertainties.
@@ -71,19 +71,19 @@ class LikelihoodSpace {
      * \returns A map from parameter names to Intervals
     */
     std::map<std::string, Interval>
-    extract_best_fit(float& ml, float cl, ErrorType error_type=ERROR_PROJECTION);
+    extract_best_fit(double& ml, float cl, ErrorType error_type=ERROR_PROJECTION);
 
     /**
      * Get a pointer to the TNtuple of samples.
      *
      * \returns A pointer to the samples
     */
-    const TNtuple* get_samples() { return samples; }
+    const TNtupleD* get_samples() { return samples; }
 
   private:
-    TNtuple* samples;  //!< Samples of the likelihood function
+    TNtupleD* samples;  //!< Samples of the likelihood function
     std::map<std::string, Interval> ml_params;  //!< Likelihood-maximizing pars
-    float ml;  //!< The maximum likelihood (negative for NLL)
+    double ml;  //!< The maximum likelihood (negative for NLL)
 };
 
 #endif  // __LIKELIHOOD_H__

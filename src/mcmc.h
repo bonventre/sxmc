@@ -28,7 +28,7 @@
 #include <hemi/array.h>
 #endif
 
-class TNtuple;
+class TNtupleD;
 class LikelihoodSpace;
 
 /**
@@ -97,7 +97,7 @@ protected:
    *                           calculation
    * \param event_total_sum Pre-allocated buffer for event term total
    */
-  void nll(const float* lut, const float* bin_counts,
+  void nll(const float* lut, const int* bin_counts,
            const double* v, double* nll,
            const double* nexpected,
            const unsigned* n_mc,

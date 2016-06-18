@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
-#include <TH1F.h>
+#include <TH1D.h>
 #include <TMath.h>
-#include <TNtuple.h>
+#include <TNtupleD.h>
 #include <TEnv.h>
 #include <TDirectory.h>
 #include <assert.h>
@@ -39,7 +39,7 @@ Interval Contour::get_interval(std::string name) {
   gEnv->SetValue("Hist.Binning.1D.x", 20000);
   this->contour_points->Draw((name + ">>_hp").c_str(), "", "goff");
   gEnv->SetValue("Hist.Binning.1D.x", default_nbins);
-  TH1F* hp = dynamic_cast<TH1F*>(gDirectory->FindObject("_hp"));
+  TH1D* hp = dynamic_cast<TH1D*>(gDirectory->FindObject("_hp"));
 
   if (hp) {
     hp->SetDirectory(NULL);

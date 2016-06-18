@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-class TNtuple;
+class TNtupleD;
 
 /**
  * TMath::Nint clone to avoid clash with CUDA headers.
@@ -26,7 +26,7 @@ unsigned nint(float nexpected);
  * \param field The name of the variable to extract
  * \returns The requested value as a float
 */
-float get_ntuple_entry(TNtuple* nt, int i, std::string field);
+double get_ntuple_entry(TNtupleD* nt, int i, std::string field);
 
 
 /**
@@ -39,7 +39,7 @@ float get_ntuple_entry(TNtuple* nt, int i, std::string field);
  * \param nt The source TNtuple
  * \returns A correlation matrix as a 1D vector
 */
-std::vector<float> get_correlation_matrix(TNtuple* nt);
+std::vector<double> get_correlation_matrix(TNtupleD* nt);
 
 
 /**

@@ -417,7 +417,7 @@ public:
     }
   }
 
-  void BinSamples(std::vector<float> &samples, std::vector<float> &bin_counts){
+  void BinSamples(std::vector<float> &samples, std::vector<int> &bin_counts){
     const double* lower = this->lower.readOnlyHostPtr();
     const double* upper = this->upper.readOnlyHostPtr();
     const int* nbins = this->nbins.readOnlyHostPtr();

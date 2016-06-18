@@ -86,7 +86,8 @@ HEMI_KERNEL(pick_new_vector)(int nthreads, RNGState* rng,
 HEMI_KERNEL(jump_decider)(RNGState* rng, double* nll_current,
                           const double* nll_proposed, double* v_current,
                           const double* v_proposed, unsigned nparameters,
-                          int* accepted, int* counter, float* jump_buffer);
+                          int* accepted, int* counter, float* jump_buffer,
+                          double* jump_nll_buffer);
 
 
 /**
@@ -104,7 +105,7 @@ HEMI_KERNEL(jump_decider)(RNGState* rng, double* nll_current,
  * \param norms_nominal The number of events nominally in the PDF
  * \param sums Output sums for subsets of events
 */
-HEMI_KERNEL(nll_event_chunks)(const float* lut, const float* bin_counts,
+HEMI_KERNEL(nll_event_chunks)(const float* lut, const int* bin_counts,
                               const double* pars, const size_t nbins, const size_t ndatasets,
                               const size_t nsignals,
                               const double* nexpected,
@@ -192,7 +193,8 @@ HEMI_KERNEL(finish_nll_jump_pick_combo)(const size_t npartial_sums,
                                         double *nll_proposed,
                                         double *v_current, double *v_proposed,
                                         int* accepted, int* counter,
-                                        float* jump_buffer, int nparameters,
+                                        float* jump_buffer, double* jump_nll_buffer,
+                                        int nparameters,
                                         const float* jump_width,
                                         const double* nexpected,
                                         const unsigned* n_mc,

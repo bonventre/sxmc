@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <TF1.h>
+#include <TH1D.h>
 #include <TH1F.h>
 
 #include <sxmc/error_estimator.h>
