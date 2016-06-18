@@ -792,7 +792,7 @@ void EvalHist::OptimizeEval() {
 }
 
 
-int EvalHist::RandomSample(std::vector<float> &events,
+int EvalHist::RandomSample(std::vector<float> &binned_samples,
                            double nexpected,
                            std::vector<double> &syst_vals,
                            std::vector<float> &uppers,
@@ -819,11 +819,8 @@ int EvalHist::RandomSample(std::vector<float> &events,
     observed = nint(nexpected);
   }
 
-  int allocatesize = observed;
-
   // Generate event array by sampling ROOT histograms, including only
   // events that pass cuts
-  events.reserve(events.size() + allocatesize * (this->nobservables + 1));
   if (hist->IsA() == TH1D::Class()) {
     TH1D* ht = dynamic_cast<TH1D*>(hist);
 
@@ -839,8 +836,9 @@ int EvalHist::RandomSample(std::vector<float> &events,
         obs = ht->GetRandom();
       }
 
-      events.push_back(obs);
-      events.push_back(dataset);
+      int bin_id = ht->GetXaxis()->FindBin(obs)-1;
+
+      binned_samples[dataset * this->total_nbins + bin_id]++;
     }
   }
   else if (hist->IsA() == TH2D::Class()) {
@@ -859,10 +857,11 @@ int EvalHist::RandomSample(std::vector<float> &events,
       else {
         ht->GetRandom2(obs0, obs1);
       }
+      
+      int bin_id0 = ht->GetXaxis()->FindBin(obs0)-1;
+      int bin_id1 = ht->GetYaxis()->FindBin(obs1)-1;
 
-      events.push_back(obs0);
-      events.push_back(obs1);
-      events.push_back(dataset);
+      binned_samples[dataset * this->total_nbins + bin_id0 * ht->GetNbinsY() + bin_id1]++;
     }
   }
   else if (hist->IsA() == TH3D::Class()) {
@@ -884,10 +883,11 @@ int EvalHist::RandomSample(std::vector<float> &events,
         ht->GetRandom3(obs0, obs1, obs2);
       }
 
-      events.push_back(obs0);
-      events.push_back(obs1);
-      events.push_back(obs2);
-      events.push_back(dataset);
+      int bin_id0 = ht->GetXaxis()->FindBin(obs0)-1;
+      int bin_id1 = ht->GetYaxis()->FindBin(obs1)-1;
+      int bin_id2 = ht->GetZaxis()->FindBin(obs2)-1;
+
+      binned_samples[dataset * this->total_nbins + bin_id0 * ht->GetNbinsY() * ht->GetNbinsZ() + bin_id1 * ht->GetNbinsZ() + bin_id2]++;
     }
   }
   else {

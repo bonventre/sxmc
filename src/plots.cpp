@@ -153,10 +153,14 @@ void plot_fit(std::map<std::string, Interval> best_fit, float live_time,
               std::vector<Systematic>& systematics,
               std::vector<Observable>& observables,
               std::set<unsigned>& datasets,
-              std::vector<float>& data,
+              std::vector<float>& binned_data,
               std::string output_path) {
   std::map<unsigned, std::vector<SpectralPlot> > all_plots;
   std::map<unsigned, std::vector<TH1F*> > all_totals;
+
+  int nbins = 1;
+  for (size_t i=0;i<observables.size();i++)
+    nbins *= observables[i].bins;
 
   for (std::set<unsigned>::iterator it=datasets.begin();
        it!=datasets.end(); ++it) {
@@ -283,11 +287,9 @@ void plot_fit(std::map<std::string, Interval> best_fit, float live_time,
       hdata->SetLineColor(kBlack);
       hdata->SetLineStyle(1);
 
-      for (size_t idata=0; idata<data.size()/(observables.size()+1); idata++) {
-        unsigned dds = data[idata * (observables.size() + 1) + observables.size()];
-        if (dds == ds) {
-          hdata->Fill(data[idata * (observables.size() + 1) + i]);
-        }
+      for (int ibin=0; ibin<nbins; ibin++) {
+        hdata->SetBinContent(ibin + 1,binned_data[ds * nbins + ibin]);
+        hdata->SetBinError(ibin + 1,sqrt(binned_data[ds * nbins + ibin]));
       }
 
       all_plots[ds][i].add(all_totals[ds][i], "Fit", "hist");

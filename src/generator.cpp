@@ -6,8 +6,9 @@
 #include <sxmc/systematic.h>
 #include <sxmc/generator.h>
 
-std::vector<float>
-make_fake_dataset(std::vector<Signal>& signals,
+void
+make_fake_dataset(std::vector<float>& binned_samples,
+                  std::vector<Signal>& signals,
                   std::vector<Systematic>& systematics,
                   std::vector<Observable>& observables,
                   bool poisson) {
@@ -27,7 +28,6 @@ make_fake_dataset(std::vector<Signal>& signals,
     lower.push_back(observables[i].lower);
   }
 
-  std::vector<float> events;
   std::vector<unsigned> observed(signals.size());
   for (size_t i=0; i<signals.size(); i++) {
     double eff = signals[i].get_efficiency(systematics);
@@ -35,7 +35,7 @@ make_fake_dataset(std::vector<Signal>& signals,
 
     observed[i] = \
       dynamic_cast<pdfz::EvalHist*>(signals[i].histogram)->RandomSample(
-        events, nevents, syst_vals, upper, lower, poisson,
+        binned_samples, nevents, syst_vals, upper, lower, poisson,
         signals[i].dataset);
 
     std::cout << "make_fake_dataset: " << signals[i].name << ": "
@@ -44,6 +44,5 @@ make_fake_dataset(std::vector<Signal>& signals,
               << eff << ")" << std::endl;
   }
 
-  return events;
 }
 

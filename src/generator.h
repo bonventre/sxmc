@@ -34,8 +34,9 @@
  * \param poisson If true, Poisson-distribute the signal rates
  * \return Array with samples
  */
-std::vector<float>
-make_fake_dataset(std::vector<Signal>& signals,
+void
+make_fake_dataset(std::vector<float>& binned_samples,
+                  std::vector<Signal>& signals,
                   std::vector<Systematic>& systematics,
                   std::vector<Observable>& observables,
                   bool poisson=true);

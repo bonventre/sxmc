@@ -149,7 +149,7 @@ MCMC::~MCMC() {
 
 
 LikelihoodSpace*
-MCMC::operator()(std::vector<float>& data, unsigned nsteps,
+MCMC::operator()(std::vector<float>& binned_data, unsigned nsteps,
                  float burnin_fraction, const bool debug_mode,
                  unsigned sync_interval) {
   // CUDA/hemi block sizes
@@ -236,11 +236,6 @@ MCMC::operator()(std::vector<float>& data, unsigned nsteps,
     std::cout << jump_width.readOnlyHostPtr()[i] << std::endl;
   }
 
-
-  //FIXME bin data
-  // binned data size: nbins * ndatasets
-  std::vector<int> binned_data(this->nbins * this->ndatasets, 0);
-  dynamic_cast<pdfz::EvalHist*>(this->pdfs[0])->BinSamples(data,binned_data);
   hemi::Array<int> bin_counts(this->nbins * this->ndatasets, true);
   for (size_t i=0;i<binned_data.size();i++)
     bin_counts.writeOnlyPtr()[i] = binned_data[i];

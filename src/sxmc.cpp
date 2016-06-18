@@ -60,12 +60,16 @@ std::vector<float> ensemble(FitConfig& fc, std::string output_path) {
     std::cout << "Experiment " << i + 1
               << " / " << fc.nexperiments << std::endl;
 
-    std::vector<float> samples;
+    int nbins = 1;
+    for (size_t j=0;j<fc.observables.size();j++)
+      nbins *= fc.observables[j].bins;
+    int ndatasets = fc.datasets.size();
+
+    std::vector<float> binned_samples(nbins * ndatasets, 0);
     if (fc.data.empty()) {
       // Make fake data
       std::cout << "ensemble: Sampling fake dataset " << i << std::endl;
-      samples = \
-        make_fake_dataset(fc.signals, fc.systematics, fc.observables, true);
+      make_fake_dataset(binned_samples, fc.signals, fc.systematics, fc.observables, true);
     }
     else {
       for (std::map<unsigned, std::vector<Signal> >::iterator it=fc.data.begin();
@@ -74,14 +78,14 @@ std::vector<float> ensemble(FitConfig& fc, std::string output_path) {
                   << it->first << "." << i << " ("
                   << it->second[i].filename << ")" << std::endl;
 
-        dynamic_cast<pdfz::EvalHist*>(it->second[i].histogram)->GetSamples(samples);
+        dynamic_cast<pdfz::EvalHist*>(it->second[i].histogram)->GetBinnedSamples(binned_samples);
       }
     }
 
     // Run MCMC
     MCMC mcmc(fc.sources, fc.signals, fc.systematics, fc.observables);
     LikelihoodSpace* ls = \
-      mcmc(samples, fc.nsteps, fc.burnin_fraction, fc.debug_mode);
+      mcmc(binned_samples, fc.nsteps, fc.burnin_fraction, fc.debug_mode);
 
     // Write out samples
     std::ostringstream lsfile;
@@ -98,7 +102,7 @@ std::vector<float> ensemble(FitConfig& fc, std::string output_path) {
     // Make projection plots
     if (fc.plots) {
       plot_fit(ls->get_best_fit(), 1.0, fc.sources, fc.signals, fc.systematics,
-               fc.observables, fc.datasets, samples, output_path);
+               fc.observables, fc.datasets, binned_samples, output_path);
     }
 
     // Build a list of upper limits

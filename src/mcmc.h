@@ -70,7 +70,7 @@ public:
    * \param sync_interval How often to copy accepted from GPU to storage
    * \returns LikelihoodSpace built from samples
    */
-  LikelihoodSpace* operator()(std::vector<float>& data,
+  LikelihoodSpace* operator()(std::vector<float>& binned_data,
                               unsigned nsteps,
                               float burnin_fraction,
                               const bool debug_mode=false,

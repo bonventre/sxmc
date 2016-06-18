@@ -401,23 +401,10 @@ public:
   /**
    * Copy out the samples array (for observable fields only) into a vector.
   */
-  void GetSamples(std::vector<float>& sv) {
-    size_t oldsize = sv.size();
+  void GetBinnedSamples(std::vector<float>& bin_counts) {
     size_t nevents = this->samples.size() / this->nfields;
     size_t ncols = this->nobservables + 1;
 
-    sv.resize(oldsize + nevents * ncols);
-
-    const float* s = samples.readOnlyHostPtr();
-    for (size_t i=0; i<nevents; i++) {
-      for (int j=0; j<this->nobservables; j++) {
-        sv[oldsize + i * (this->nobservables+1) + j] = s[i * this->nfields + j];
-      }
-      sv[oldsize + i * (this->nobservables+1) + this->nobservables] = this->dataset;
-    }
-  }
-
-  void BinSamples(std::vector<float> &samples, std::vector<int> &bin_counts){
     const double* lower = this->lower.readOnlyHostPtr();
     const double* upper = this->upper.readOnlyHostPtr();
     const int* nbins = this->nbins.readOnlyHostPtr();
@@ -429,14 +416,15 @@ public:
       double span = upper[iobs] - lower[iobs];
       bin_scale[iobs] = nbins[iobs] / span;
     }
+    
+    const float *s = samples.readOnlyHostPtr();
 
-    for (unsigned ipoint=0; ipoint<samples.size()/(this->nobservables+1); ipoint++) {
+    for (unsigned ipoint=0; ipoint<nevents; ipoint++) {
       bool in_pdf_domain = true;
       int bin_id = 0;
 
       for (int iobs=0; iobs<this->nobservables; iobs++) {
-        int ielement = (this->nobservables + 1) * ipoint + iobs;
-        double element = samples[ielement];
+        double element = s[ipoint * this->nfields + iobs];
 
         // Throw out this event if outside of PDF domain
         if (element < lower[iobs] || element >= upper[iobs]) {
@@ -449,10 +437,8 @@ public:
       }
 
       // Read dataset ID from the last column
-      int idx = (this->nobservables + 1) * ipoint + nobservables;
-      int sample_dataset = samples[idx];
       if (in_pdf_domain) {
-        bin_counts[sample_dataset * this->total_nbins + bin_id]++;
+        bin_counts[this->dataset * this->total_nbins + bin_id]++;
       }
     }
   }
