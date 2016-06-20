@@ -233,6 +233,7 @@ FitConfig::FitConfig(std::string filename) {
     for (size_t k=0; k<this->sources.size(); k++) {
       if (this->sources[k].name == source_name) {
         source = this->sources[k];
+        this->sources[k].nexpected += nexpected;
         break;
       }
     }

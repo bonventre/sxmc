@@ -123,6 +123,7 @@ private:
                            //!< reduction kernel
   std::string varlist;  //!< String identifier list for ntuple indexing
   hemi::Array<double>* parameter_means;  //!< Parameter central values
+  hemi::Array<double>* parameter_nexpected;  //!< Parameter central values
   hemi::Array<double>* parameter_sigma;  //!< Parameter Gaussian uncertainty
   hemi::Array<double>* nexpected;  //!< Expectation values
   hemi::Array<unsigned>* n_mc;  //!< Number of MC samples

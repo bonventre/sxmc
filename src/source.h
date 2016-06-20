@@ -18,7 +18,7 @@ struct Source {
   Source(const std::string& _name, size_t _index,
          float _mean, float _sigma, bool _fixed)
       : name(_name), index(_index),
-        mean(_mean), sigma(_sigma), fixed(_fixed) {}
+        mean(_mean), nexpected(0), sigma(_sigma), fixed(_fixed) {}
 
   // Load from JSON configuration
   Source(const std::string& _name, const Json::Value& params);
@@ -28,6 +28,7 @@ struct Source {
   std::string name;  //!< String identifier
   size_t index;  //!< Index in the list of sources
   float mean;  //!< Mean expectation (scaling, 1.0 is nominal)
+  float nexpected;
   float sigma;  //!< Gaussian constraint (fractional)
   bool fixed;  //!< Rate is fixed
 };

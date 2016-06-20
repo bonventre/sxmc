@@ -60,12 +60,14 @@ MCMC::MCMC(const std::vector<Source>& sources,
   // Set mean/expectation and sigma for all fit parameters
   this->nparameters = this->nsources + npars;
   this->parameter_means = new hemi::Array<double>(this->nparameters, true);
+  this->parameter_nexpected = new hemi::Array<double>(this->nparameters, true);
   this->parameter_sigma = new hemi::Array<double>(this->nparameters, true);
   this->parameter_fixed.resize(this->nparameters);
   this->nfloat = 0; 
 
   for (size_t i=0; i<this->nsources; i++) {
     this->parameter_means->writeOnlyHostPtr()[i] = sources[i].mean;
+    this->parameter_nexpected->writeOnlyHostPtr()[i] = sources[i].nexpected;
     this->parameter_sigma->writeOnlyHostPtr()[i] = sources[i].sigma;
     this->parameter_fixed[i] = sources[i].fixed;
     this->nfloat += (sources[i].fixed ? 0 : 1);
@@ -140,6 +142,7 @@ MCMC::MCMC(const std::vector<Source>& sources,
 
 MCMC::~MCMC() {
   delete parameter_means;
+  delete parameter_nexpected;
   delete parameter_sigma;
   delete nexpected;
   delete n_mc;
@@ -217,6 +220,7 @@ MCMC::operator()(std::vector<float>& binned_data, unsigned nsteps,
     }
 
     float mean = this->parameter_means->readOnlyHostPtr()[i];
+    float nexpected = this->parameter_nexpected->readOnlyHostPtr()[i];
     float sigma = this->parameter_sigma->readOnlyHostPtr()[i];
     float width = 0.1;
 
@@ -224,7 +228,7 @@ MCMC::operator()(std::vector<float>& binned_data, unsigned nsteps,
       width = sigma;
     }
     else if (i < nsignals) {
-      float m = std::max(mean, (float) 10);
+      float m = std::max(nexpected, (float) 10);
       width = sqrt(m) / m;
     }
     else {
